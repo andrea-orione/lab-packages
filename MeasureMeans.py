@@ -105,67 +105,34 @@ def keysightU1733C_resistance(R, freq=1e3):
         R (float): the value of the resistance.
         freq (float): the frequency at which was taken the measure.
     """
-    if (freq == 100 or freq == 120 or freq == 1e3):
-        status = 0
-    elif freq == 10e3:
-        status = 1
-    elif freq == 100e3:
-        status == 2
-    else:
+    frequencies = [100, 120, 1e3, 10e3, 100e3]
+    if freq not in frequencies:
         raise ValueError("Invalid frequency value")
 
-    if (R < 2):
-        if status == 2:
-            sR = 1.0*R/100. + 50e-4
-        else:
-            sR = 0.7*R/100. + 50e-4
-    elif (R < 20):
-        sR = 0.7*R/100. + 8e-3
-    elif (R < 200):
-        if status == 2:
-            sR = 0.5*R/100. + 5e-2
-        else:
-            sR = 0.2*R/100. + 3e-2
-    elif (R < 2e3):
-        if status == 2:
-            sR = 0.5*R/100. + 5e-1
-        else:
-            sR = 0.2*R/100. + 3e-1
-    elif (R < 20e3):
-        if status == 2:
-            sR = 0.5*R/100. + 5.
-        else:
-            sR = 0.2*R/100. + 3.
-    elif (R < 200e3):
-        if status == 2:
-            sR = 0.7*R/100. + 80.
-        else:
-            sR = 0.5*R/100. + 50.
-    elif (R < 2e6):
-        if status == 0:
-            sR = 0.5*R/100. + 5e2
-        elif status == 1:
-            sR = 0.7*R/100. + 5e2
-        else:
+    freq_index = frequencies.index(freq)
+
+    ranges = [2, 20, 200, 2e3, 20e3, 200e3, 2e6, 20e6, 200e6]
+
+    errors = [[(0.7, 50e-4), (0.7, 8e-3), (0.2, 3e-2), (0.2, 3e-1), (0.2, 3.),
+               (0.5, 5e1), (0.5, 5e2), (2.0, 8e3), (6.0, 80e4)],
+              [(0.7, 50e-4), (0.7, 8e-3), (0.2, 3e-2), (0.2, 3e-1), (0.2, 3.),
+               (0.5, 5e1), (0.5, 5e2), (2.0, 8e3), (6.0, 80e4)],
+              [(0.7, 50e-4), (0.7, 8e-3), (0.2, 3e-2), (0.2, 3e-1), (0.2, 3.),
+               (0.5, 5e1), (0.5, 5e2), (2.0, 8e3), (6.0, 80e4)],
+              [(0.7, 50e-4), (0.7, 8e-3), (0.2, 3e-2), (0.2, 3e-1), (0.2, 3.),
+               (0.5, 5e1), (0.7, 5e2), (5.0, 8e3), False],
+              [(1.0, 50e-4), (0.7, 8e-3), (0.5, 5e-2), (0.5, 5e-1), (0.5, 5.),
+               (0.7, 8e1), False, False, False]]
+    for i in range(len(ranges)):
+        if R >= ranges[i]:
+            pass
+        if not errors[freq_index][i]:
             raise ValueError("Invalid value of R.\
                               Exceedes the range for this frequency.")
-    elif (R < 20e6):
-        if status == 0:
-            sR = 2.*R/100. + 8e3
-        elif status == 1:
-            sR = 5.*R/100. + 8e3
-        else:
-            raise ValueError("Invalid value of R.\
-                              Exceedes the range for this frequency.")
-    elif (R < 200e6):
-        if status == 0:
-            sR = 6.*R/100. + 80e4
-        else:
-            raise ValueError("Invalid value of R.\
-                              Exceedes the range for this frequency.")
-    else:
-        raise ValueError("Invalid value of R. Exceedes the range.")
-    return Datum(R, sR)
+        errort = errors[freq_index][i]
+        return Datum(R, errort[0]*R/100. + errort[1])
+
+    raise ValueError("Invalid value of R. Exceedes the range.")
 
 
 def keysightU1733C_capacitance(C, freq=1e3):
@@ -176,29 +143,40 @@ def keysightU1733C_capacitance(C, freq=1e3):
         C (float): the value of the capacitance.
         freq (float): the frequency at which was taken the measure.
     """
-    if freq == 1e3:
-        factor = 1
-    elif freq == 120e3:
-        factor = 10
-    else:
-        raise ValueError("Invalid frequency value.")
-    if (C < 2e-9*factor):
-        sC = 1.*C/100. + 5e-13
-    elif (C < 20e-9*factor):
-        sC = 0.7*C/100. + 5e-12
-    elif (C < 200e-9*factor):
-        sC = 0.7*C/100. + 3e-11
-    elif (C < 2e-6*factor):
-        sC = 0.7*C/100. + 3e-10
-    elif (C < 20e-6*factor):
-        sC = 0.7*C/100. + 3e-9
-    elif (freq == 1e3 and C < 200e-6) or (freq == 120e3 and C < 1e-3):
-        sC = 1.*C/100. + 5e-8
-    elif (freq == 1e3 and C < 1e-3) or (freq == 120e3 and C < 10e-3):
-        sC = 3.*C/100. + 5e-6
-    else:
-        return ValueError("Invalid value of C. Exceedes the range.")
-    return Datum(C, sC)
+    frequencies = [100, 120, 1e3, 10e3, 100e3]
+    if freq not in frequencies:
+        raise ValueError("Invalid frequency value")
+
+    freq_index = frequencies.index(freq)
+
+    ranges = [20e-12, 200e-12, 2e-9, 20e-9, 200e-9, 2e-6, 20e-6,
+              200e-6, 2e-3, 20e-3]
+
+    errors = [[False, False, (0.5, 10e-13), (0.5, 5e-12),
+               (0.2, 3e-11), (0.2, 3e-10), (0.2, 3e-9),
+               (0.3, 3e-8), (0.5, 5e-7), (0.5, 8e-6)],
+              [False, False, (0.5, 10e-13), (0.5, 5e-12),
+               (0.2, 3e-11), (0.2, 3e-10), (0.2, 3e-9),
+               (0.3, 3e-8), (0.5, 5e-7), (0.5, 8e-6)],
+              [False, (0.5, 10e-14), (0.5, 5e-13), (0.2, 3e-12),
+               (0.2, 3e-11), (0.2, 3e-10), (0.2, 3e-9),
+               (0.5, 5e-8), (0.5, 8e-7), False],
+              [(1.0, 20e-15), (0.8, 10e-14), (0.5, 3e-13), (0.5, 3e-12),
+               (0.5, 3e-11), (0.2, 3e-10), (0.5, 5e-9),
+               (0.5, 8e-8), False, False],
+              [(2.5, 10e-15), (2.0, 10e-14), (2.0, 10e-13), (0.7, 10e-12),
+               (0.7, 10e-11), (0.7, 10e-10), (5.0, 10e-9),
+               False, False, False]]
+    for i in range(len(ranges)):
+        if C >= ranges[i]:
+            pass
+        if not errors[freq_index][i]:
+            raise ValueError("Invalid value of C.\
+                              Exceedes the range for this frequency.")
+        errort = errors[freq_index][i]
+        return Datum(C, errort[0]*C/100. + errort[1])
+
+    raise ValueError("Invalid value of C. Exceedes the range.")
 
 
 def keysightU1733C_inductance(L, freq=1e3):
@@ -209,27 +187,34 @@ def keysightU1733C_inductance(L, freq=1e3):
         L (float): the value of the inductance.
         freq (float): the frequency at which was taken the measure.
     """
-    if freq == 1e3:
-        factor = 1
-    elif freq == 120e3:
-        factor = 10
-    else:
-        raise ValueError("Invalid frequency value.")
-    if (L < 2e-3*factor):
-        sL = 2.*L/100. + 1e7*L*L/1e6 + 5e-7
-    elif (L < 20e-3*factor):
-        sL = 1.*L/100. + 1e6*L*L/1e6 + 5e-6
-    elif (L < 200e-3*factor):
-        sL = 0.7*L/100. + 1e5*L*L/1e6 + 5e-5
-    elif (L < 2*factor):
-        sL = 0.7*L/100. + 1e4*L*L/1e6 + 5e-4
-    elif (L < 20*factor):
-        sL = 0.7*L/100. + 1e3*L*L/1e6 + 5e-3
-    elif (L < 100*factor):
-        sL = 1.*L/100. + 1e2*L*L/1e6 + 5e-2
-    else:
-        raise ValueError("Invalid value of L. Exceedes the range.")
-    return Datum(L, sL)
+    frequencies = [100, 120, 1e3, 10e3, 100e3]
+    if freq not in frequencies:
+        raise ValueError("Invalid frequency value")
+
+    freq_index = frequencies.index(freq)
+
+    ranges = [20e-6, 200e-6, 2e-3, 20e-3, 200e-3, 2., 20., 200., 2e3]
+
+    errors = [[False, False, (0.7, 10e-7), (0.5, 3e-6), (0.5, 3e-5),
+               (0.2, 3e-4), (0.2, 3e-3), (0.7, 5e-2), (1.0, 5e-1)],
+              [False, False, (0.7, 10e-7), (0.5, 3e-6), (0.5, 3e-5),
+               (0.2, 3e-4), (0.2, 3e-3), (0.7, 5e-2), (1.0, 5e-1)],
+              [False, (1.0, 5e-8), (0.5, 5e-7), (0.2, 3e-6), (0.2, 3e-5),
+               (0.2, 3e-4), (0.5, 5e-3), (1.0, 5e-2), (2.0, 8e-1)],
+              [(1.0, 5e-9), (0.7, 3e-8), (0.5, 3e-7), (0.3, 3e-6), (0.2, 3e-5),
+               (0.5, 5e-4), (1.0, 5e-3), (2.0, 8e-2), False],
+              [(2.5, 20e-9), (2.5, 20e-8), (0.8, 20e-7), (0.8, 10e-6),
+               (1.0, 10e-5), (1.0, 10e-4), (2.0, 10e-3), False, False]]
+    for i in range(len(ranges)):
+        if L >= ranges[i]:
+            pass
+        if not errors[freq_index][i]:
+            raise ValueError("Invalid value of L.\
+                              Exceedes the range for this frequency.")
+        errort = errors[freq_index][i]
+        return Datum(L, errort[0]*L/100. + errort[1])
+
+    raise ValueError("Invalid value of L. Exceedes the range.")
 
 
 # Amprobe 37XR-A
@@ -446,3 +431,9 @@ def supertester680R_ACcurrent(J, x2sens=False):
     else:
         raise ValueError("Invalid value of J. Exceedes the range.")
     return Datum(J, sJ)
+
+
+if __name__ == "__main__":
+    print("Hi, this is the MeasureMeans library.\n\
+           It contains various functions to automatically uncertainties\
+           of some of the equipment that I have in my laboratory.")
