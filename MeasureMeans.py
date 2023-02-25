@@ -61,7 +61,7 @@ def agilentU1731A_capacitance(C, freq=1e3):
     elif (freq == 1e3 and C < 1e-3) or (freq == 120e3 and C < 10e-3):
         sC = 3.*C/100. + 5e-6
     else:
-        return ValueError("Invalid value of C. Exceedes the range.")
+        raise ValueError("Invalid value of C. Exceedes the range.")
     return Datum(C, sC)
 
 

@@ -1,6 +1,6 @@
 """The required libraries."""
 import math
-from scipy.stats import norm
+from scipy.stats import norm, t
 
 
 class Datum:
@@ -252,7 +252,7 @@ class Datum:
         Parameters:
             datum (Datum): the datum to be taken the square root.
         """
-        if isinstance((datum), (float, int)):
+        if isinstance(datum, (float, int)):
             return math.sqrt(datum)
 
         if not isinstance(datum, Datum):
@@ -269,7 +269,7 @@ class Datum:
         Parameters:
             datum (Datum): the datum to be taken the cube root.
         """
-        if isinstance((datum), (float, int)):
+        if isinstance(datum, (float, int)):
             return math.cbrt(datum)
 
         if not isinstance(datum, Datum):
@@ -286,7 +286,7 @@ class Datum:
         Parameters:
             datum (Datum): the datum to be taken the exponential.
         """
-        if isinstance((datum), (float, int)):
+        if isinstance(datum, (float, int)):
             return math.exp(datum)
 
         if not isinstance(datum, Datum):
@@ -303,7 +303,7 @@ class Datum:
         Parameters:
             datum (Datum): the datum to be taken the exponential.
         """
-        if isinstance((datum), (float, int)):
+        if isinstance(datum, (float, int)):
             return math.exp2(datum)
 
         if not isinstance(datum, Datum):
@@ -325,7 +325,7 @@ class Datum:
             datum (Datum): the datum to be taken the logarithm.
             base (float, default=False): if given, the base of the logarithm.
         """
-        if isinstance((datum), (float, int)):
+        if isinstance(datum, (float, int)):
             if base:
                 return math.log(datum, base)
             return math.log(datum)
@@ -335,9 +335,9 @@ class Datum:
 
         if base:
             return Datum(math.log(datum.value, base),
-                         datum.error*(datum.value*math.log(base)))
+                         datum.error/(datum.value*math.log(base)))
         return Datum(math.log(datum.value),
-                     datum.error*(datum.value))
+                     datum.error/(datum.value))
 
     @staticmethod
     def log2(datum):
@@ -347,14 +347,14 @@ class Datum:
         Parameters:
             datum (Datum): the datum to be taken the logarithm.
         """
-        if isinstance((datum), (float, int)):
+        if isinstance(datum, (float, int)):
             return math.log2(datum)
 
         if not isinstance(datum, Datum):
             raise TypeError
 
         return Datum(math.log2(datum.value),
-                     datum.error*(datum.value*math.log(2.0)))
+                     datum.error/(datum.value*math.log(2.0)))
 
     @staticmethod
     def log10(datum):
@@ -364,14 +364,14 @@ class Datum:
         Parameters:
             datum (Datum): the datum to be taken the logarithm.
         """
-        if isinstance((datum), (float, int)):
+        if isinstance(datum, (float, int)):
             return math.log10(datum)
 
         if not isinstance(datum, Datum):
             raise TypeError
 
         return Datum(math.log10(datum.value),
-                     datum.error*(datum.value*math.log(10.0)))
+                     datum.error/(datum.value*math.log(10.0)))
 
     @staticmethod
     def pow(base, exponent):
@@ -408,7 +408,7 @@ class Datum:
         Parameters:
             datum (Datum): the datum to be taken the arcocosine.
         """
-        if isinstance((datum), (float, int)):
+        if isinstance(datum, (float, int)):
             return math.acos(datum)
 
         if not isinstance(datum, Datum):
@@ -425,7 +425,7 @@ class Datum:
         Parameters:
             datum (Datum): the datum to be taken the arcosine.
         """
-        if isinstance((datum), (float, int)):
+        if isinstance(datum, (float, int)):
             return math.asin(datum)
 
         if not isinstance(datum, Datum):
@@ -442,7 +442,7 @@ class Datum:
         Parameters:
             datum (Datum): the datum to be taken the arcotangent.
         """
-        if isinstance((datum), (float, int)):
+        if isinstance(datum, (float, int)):
             return math.atan(datum)
 
         if not isinstance(datum, Datum):
@@ -452,6 +452,31 @@ class Datum:
                      datum.error/(1+datum.value**2))
 
     @staticmethod
+    def atan2(opposite, adjacent):
+        """
+        Calculate the arcotangent given the two sides.
+
+        Parameters:
+            opposite (Datum): the opposite side of the triangle.
+            adjacent (Datum): the adjacent side of the triangle.
+        """
+        if (isinstance(opposite, (float, int)) and isinstance(
+                adjacent, (float, int))):
+            return math.atan2(opposite, adjacent)
+
+        if isinstance(opposite, (float, int)):
+            opposite = Datum(opposite)
+
+        if isinstance(adjacent, (float, int)):
+            adjacent = Datum(adjacent)
+
+        if not (isinstance(opposite, Datum) and isinstance(adjacent, Datum)):
+            raise TypeError
+
+        return Datum(math.atan2(opposite.value, adjacent.value),
+                     Datum.tan(opposite/adjacent).error)
+
+    @staticmethod
     def cos(datum):
         """
         Calculate the cosine of the datum.
@@ -459,7 +484,7 @@ class Datum:
         Parameters:
             datum (Datum): the datum to be taken the cosine.
         """
-        if isinstance((datum), (float, int)):
+        if isinstance(datum, (float, int)):
             return math.cos(datum)
 
         if not isinstance(datum, Datum):
@@ -476,7 +501,7 @@ class Datum:
         Parameters:
             datum (Datum): the datum to be taken the sine.
         """
-        if isinstance((datum), (float, int)):
+        if isinstance(datum, (float, int)):
             return math.sin(datum)
 
         if not isinstance(datum, Datum):
@@ -493,7 +518,7 @@ class Datum:
         Parameters:
             datum (Datum): the datum to be taken the tangent.
         """
-        if isinstance((datum), (float, int)):
+        if isinstance(datum, (float, int)):
             return math.tan(datum)
 
         if not isinstance(datum, Datum):
@@ -510,7 +535,7 @@ class Datum:
         Parameters:
             datum (Datum): the datum to be converted.
         """
-        if isinstance((datum), (float, int)):
+        if isinstance(datum, (float, int)):
             return math.degrees(datum)
 
         if not isinstance(datum, Datum):
@@ -526,7 +551,7 @@ class Datum:
         Parameters:
             datum (Datum): the datum to be converted.
         """
-        if isinstance((datum), (float, int)):
+        if isinstance(datum, (float, int)):
             return math.radians(datum)
 
         if not isinstance(datum, Datum):
@@ -561,7 +586,7 @@ class Datum:
         return pVal
 
     @staticmethod
-    def student_compatible(datum1, datum2, t: bool = False):
+    def student_compatible(datum1, datum2, tv: bool = False):
         """
         Perform a student test.
 
@@ -576,13 +601,13 @@ class Datum:
 
         Returs:
             pVal (float): the p-value of the result.
-            t (float, optional): the value of the student variable.
+            tv (float, optional): the value of the student variable.
         """
         tVal = (datum1.value-datum2.value)/math.sqrt(datum1.error**2
                                                      + datum2.error**2)
-        pVal = norm.cdf(-abs(tVal))*2
+        pVal = t.cdf(-abs(tVal))*2
 
-        if t:
+        if tv:
             return pVal, tVal
         return pVal
 
