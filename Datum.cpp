@@ -2,230 +2,250 @@
 #include <cstdlib>
 #include <iterator>
 #include <math.h>
+#include <ostream>
 #include <string>
 #include <sys/types.h>
 #include <type_traits>
+#include <iostream>
 #include "Datum.h"
 
 
-Datum::Datum(double valuep) : value(valuep), error(0.) {}
+Datum::Datum() : m_value(0.), m_uncertainty(0.) {}
 
-Datum::Datum(double valuep, double errorp)
-  : value(valuep),
-    error(std::abs(errorp)) {}
+Datum::Datum(double value) : m_value(value), m_uncertainty(0.) {}
 
-double Datum::get_value() { return value; }
+Datum::Datum(double value, double uncertainty)
+  : m_value(value),
+    m_uncertainty(std::abs(uncertainty)) {}
 
-double Datum::get_error() { return error; }
+double Datum::get_value() const { return m_value; }
 
-void Datum::set_value(double valuep) { value = valuep; }
+double Datum::get_uncertainty() const { return m_uncertainty; }
 
-void Datum::set_error(double errorp) { error = errorp; }
+void Datum::set_value(double value) { m_value = value; }
 
-Datum Datum::operator+(Datum other)
+void Datum::set_uncertainty(double uncertainty) { m_uncertainty = uncertainty; }
+
+Datum Datum::operator+(Datum other) const
 {
-  return Datum(value + other.value, error + other.error);
+  return Datum(m_value + other.m_value, m_uncertainty + other.m_uncertainty);
 }
 
-Datum Datum::operator-(Datum other)
+Datum Datum::operator-(Datum other) const
 {
-  return Datum(value - other.value, error + other.error);
+  return Datum(m_value - other.m_value, m_uncertainty + other.m_uncertainty);
 }
 
-Datum Datum::operator*(Datum other)
+Datum Datum::operator*(Datum other) const
 {
-  return Datum(value * other.value, error * other.value + other.error * value);
+  return Datum(m_value * other.m_uncertainty,
+               m_uncertainty * other.m_value + other.m_uncertainty * m_value);
 }
 
-Datum Datum::operator/(Datum other)
+Datum Datum::operator/(Datum other) const
 {
-  return Datum(value/other.value,
-               error/other.value + other.error*value/(other.value*other.value));
+  return Datum(m_value/other.m_value,
+               m_uncertainty/other.m_value +
+               other.m_uncertainty*m_value/(other.m_value*other.m_value));
 }
 
-Datum Datum::add(Datum other, bool quadrature)
+Datum Datum::add(Datum other, bool quadrature) const
 {
   if (quadrature)
-    return Datum(value + other.value,
-                 std::sqrt(error*error + other.error*other.error));
-  return Datum(value + other.value, error + other.error);
+    return Datum(m_value + other.m_value,
+                 std::sqrt(std::pow(m_uncertainty,2) +
+                           std::pow(other.m_uncertainty,2)));
+  return Datum(m_value + other.m_value, m_uncertainty + other.m_uncertainty);
 }
 
-Datum Datum::subtract(Datum other, bool quadrature)
+Datum Datum::subtract(Datum other, bool quadrature) const
 {
   if (quadrature)
-    return Datum(value - other.value,
-                 std::sqrt(error * error + other.error * other.error));
-  return Datum(value - other.value, error + other.error);
+    return Datum(m_value - other.m_value,
+                 std::sqrt(std::pow(m_uncertainty,2) +
+                           std::pow(other.m_uncertainty,2)));
+  return Datum(m_value - other.m_value, m_uncertainty + other.m_uncertainty);
 }
 
-Datum Datum::multiply(Datum other, bool quadrature)
+Datum Datum::multiply(Datum other, bool quadrature) const
 {
   if (quadrature)
-    return Datum(value * other.value,
-                 std::sqrt(error*error*other.value*other.value +
-                           other.error*other.error*value*value));
-  return Datum(value * other.value, error * other.value + other.error * value);
+    return Datum(m_value * other.m_value,
+                 std::sqrt(std::pow(m_uncertainty,2)*std::pow(other.m_value,2) +
+                           std::pow(other.m_uncertainty,2)*std::pow(m_value,2)));
+  return Datum(m_value * other.m_value,
+               m_uncertainty * other.m_value + other.m_uncertainty * m_value);
 }
 
-Datum Datum::divide(Datum other, bool quadrature)
+Datum Datum::divide(Datum other, bool quadrature) const
 {
   if (quadrature)
-    return Datum(value / other.value,
-                 std::sqrt(std::pow(error/other.value,2) +
-                           std::pow(other.error*value,2)/std::pow(other.value, 4)));
-  return Datum(value / other.value,
-               error/other.value + other.error*value/std::pow(other.value, 2));
+    return Datum(m_value / other.m_value,
+                 std::sqrt(std::pow(m_uncertainty/other.m_value,2) +
+                           std::pow(other.m_uncertainty*m_value,2)/
+                           std::pow(other.m_value, 4)));
+  return Datum(m_value / other.m_value,
+               m_uncertainty/other.m_value +
+               other.m_uncertainty*m_value/std::pow(other.m_value, 2));
 }
 
-bool Datum::operator<(Datum other) { return value < other.value; }
+bool Datum::operator<(Datum other) const { return m_value < other.m_value; }
 
-bool Datum::operator>(Datum other) { return value > other.value; }
+bool Datum::operator>(Datum other) const { return m_value > other.m_value; }
 
-std::string Datum::to_string()
+std::string Datum::to_string() const
 {
-  int magnitude = std::floor(std::log10(error));
-  if (std::floor(error/std::pow(10,magnitude)) == 1)
+  int magnitude = std::floor(std::log10(m_uncertainty));
+  if (std::floor(m_uncertainty/std::pow(10,magnitude)) == 1)
     magnitude --;
-  return std::to_string(std::round(value/std::pow(10,magnitude))*std::pow(10,magnitude))
-    + " +- " + std::to_string(std::round(error/std::pow(10,magnitude))*std::pow(10,magnitude));
+  return std::to_string(std::round(m_value/std::pow(10,magnitude))*
+                        std::pow(10,magnitude))
+    + " +- " + std::to_string(std::round(m_uncertainty/std::pow(10,magnitude))*
+                              std::pow(10,magnitude));
 }
 
 Datum Datum::sqrt(Datum dato)
 {
-  return Datum(std::sqrt(dato.value),
-               0.5*dato.error/std::sqrt(dato.value));
+  return Datum(std::sqrt(dato.m_value),
+               0.5*dato.m_uncertainty/std::sqrt(dato.m_value));
 }
 
 Datum Datum::cbrt(Datum dato)
 {
-  return Datum(std::cbrt(dato.value),
-               1./3.*dato.error/std::cbrt(dato.value*dato.value));
+  return Datum(std::cbrt(dato.m_uncertainty),
+               1./3.*dato.m_uncertainty/std::pow(dato.m_value,2./3.));
 }
 
 Datum Datum::exp(Datum dato)
 {
-  return Datum(std::exp(dato.value),
-               dato.error*std::exp(dato.value));
+  return Datum(std::exp(dato.m_value),
+               dato.m_uncertainty*std::exp(dato.m_value));
 }
 
 Datum Datum::exp2(Datum dato)
 {
-  return Datum(std::exp2(dato.value),
-               dato.error*std::exp2(dato.value)*std::log(dato.value));
+  return Datum(std::exp2(dato.m_value),
+               dato.m_uncertainty*std::exp2(dato.m_value)*std::log(dato.m_value));
 }
 
 Datum Datum::log(Datum dato)
 {
-  return Datum(std::log(dato.value), dato.error/dato.value);
+  return Datum(std::log(dato.m_value), dato.m_uncertainty/dato.m_value);
 }
 
 Datum Datum::log10(Datum dato)
 {
-  return Datum(std::log10(dato.value), dato.error/(dato.value*std::log(10.)));
+  return Datum(std::log10(dato.m_value),
+               dato.m_uncertainty/(dato.m_value*std::log(10.)));
 }
 
 Datum Datum::log2(Datum dato)
 {
-  return Datum(std::log2(dato.value), dato.error/(dato.value*std::log(2.)));
+  return Datum(std::log2(dato.m_value),
+               dato.m_uncertainty/(dato.m_value*std::log(2.)));
 }
 
 Datum Datum::log(Datum dato, double base)
 {
-  return Datum(std::log(dato.value)/std::log(base),
-               dato.error/(dato.value*std::log(base)));
+  return Datum(std::log(dato.m_value)/std::log(base),
+               dato.m_uncertainty/(dato.m_value*std::log(base)));
 }
 
 Datum Datum::log(Datum dato, Datum base, bool quadrature)
 {
   if (quadrature)
-    return Datum(std::log(dato.value)/std::log(base.value),
-                 std::sqrt(std::pow(dato.error/(dato.value*std::log(base.value)),2)
-                           + std::pow(base.error*std::log(dato.value)
-                                      /(std::pow(std::log(base.value),2)
-                                        *base.value),2)));
-  return Datum(std::log(dato.value)/std::log(base.value),
-               dato.error/(dato.value*std::log(base.value))
-               + base.error*std::log(dato.value)/(std::pow(std::log(base.value),2)
-                                                  *base.value));
+    return Datum(std::log(dato.m_value)/std::log(base.m_value),
+                 std::sqrt(std::pow(dato.m_uncertainty/
+                                    (dato.m_value*std::log(base.m_value)),2) +
+                           std::pow(base.m_uncertainty*std::log(dato.m_value)/
+                                    (std::pow(std::log(base.m_value),2)*
+                                     base.m_value),2)));
+  return Datum(std::log(dato.m_value)/std::log(base.m_value),
+               dato.m_uncertainty/(dato.m_value*std::log(base.m_value)) +
+               base.m_uncertainty*std::log(dato.m_value)/
+               (std::pow(std::log(base.m_value),2) * base.m_value));
 }
 
 Datum Datum::pow(Datum base, Datum exponent, bool quadrature)
 {
   if (quadrature)
-    return Datum(std::pow(base.value, exponent.value),
-                 std::sqrt(std::pow(base.error*exponent.value*std::pow(base.value,exponent.value-1),2) +
-                           std::pow(exponent.error*std::log(base.value)*std::pow(base.value, exponent.value),2)));
-  return Datum(std::pow(base.value, exponent.value),
-                 base.error*exponent.value*std::pow(base.value,exponent.value-1) +
-                 exponent.error*std::log(base.value)*std::pow(base.value, exponent.value));
+    return Datum(std::pow(base.m_value, exponent.m_value),
+                 std::sqrt(std::pow(base.m_uncertainty*exponent.m_value*
+                                    std::pow(base.m_value,exponent.m_value-1),2) +
+                           std::pow(exponent.m_uncertainty*std::log(base.m_value)*
+                                    std::pow(base.m_value, exponent.m_value),2)));
+  return Datum(std::pow(base.m_value, exponent.m_value),
+               base.m_uncertainty*exponent.m_value*
+               std::pow(base.m_value,exponent.m_value-1) +
+               exponent.m_uncertainty*std::log(base.m_value)*
+               std::pow(base.m_value, exponent.m_value));
 }
 
 Datum Datum::acos(Datum dato)
 {
-  return Datum(std::acos(dato.value),
-               dato.error/std::sqrt(1-dato.value*dato.value));
+  return Datum(std::acos(dato.m_value),
+               dato.m_uncertainty/std::sqrt(1-dato.m_value*dato.m_value));
 }
 
 Datum Datum::asin(Datum dato)
 {
-  return Datum(std::asin(dato.value),
-               dato.error/std::sqrt(1-dato.value*dato.value));
+  return Datum(std::asin(dato.m_value),
+               dato.m_uncertainty/std::sqrt(1-dato.m_value*dato.m_value));
 }
 
 Datum Datum::atan(Datum dato)
 {
-  return Datum(std::atan(dato.value),
-               dato.error/(1+dato.value*dato.value));
+  return Datum(std::atan(dato.m_value),
+               dato.m_uncertainty/(1+dato.m_value*dato.m_value));
 }
 
 Datum Datum::atan2(Datum opposite, Datum adjacent)
 {
-  return Datum(std::atan2(opposite.value, adjacent.value),
-               atan(opposite/adjacent).error);
+  return Datum(std::atan2(opposite.m_value, adjacent.m_value),
+               atan(opposite/adjacent).m_uncertainty);
 }
 
 Datum Datum::cos(Datum dato)
 {
-  return Datum(std::cos(dato.value),
-               dato.error*std::sin(dato.value));
+  return Datum(std::cos(dato.m_value),
+               dato.m_uncertainty*std::sin(dato.m_value));
 }
 
 Datum Datum::sin(Datum dato)
 {
-  return Datum(std::sin(dato.value),
-               dato.error*std::cos(dato.value));
+  return Datum(std::sin(dato.m_value),
+               dato.m_uncertainty*std::cos(dato.m_value));
 }
 
 Datum Datum::tan(Datum dato)
 {
-  return Datum(std::tan(dato.value),
-               dato.error/std::pow(std::cos(dato.value),2));
+  return Datum(std::tan(dato.m_value),
+               dato.m_uncertainty/std::pow(std::cos(dato.m_value),2));
 }
 
 Datum Datum::degrees(Datum dato)
 {
-  return Datum(dato.value*360./M_2_PI,
-               dato.error*360./M_2_PI);
+  return Datum(dato.m_value*360./M_2_PI,
+               dato.m_uncertainty*360./M_2_PI);
 }
 
 Datum Datum::radians(Datum dato)
 {
-  return Datum(dato.value*M_2_PI/360.,
-               dato.error*M_2_PI/360.);
+  return Datum(dato.m_value*M_2_PI/360.,
+               dato.m_uncertainty*M_2_PI/360.);
 }
 
 double Datum::normalCompatible(Datum dato1, Datum dato2)
 {
-  double z = (dato1.value-dato2.value)/
-    std::sqrt(dato1.error*dato1.error+dato2.error*dato2.error);
+  double z = (dato1.m_value-dato2.m_value)/
+    std::sqrt(std::pow(dato1.m_uncertainty,2)+std::pow(dato2.m_uncertainty,2));
   return std::erfc(abs(z*M_SQRT1_2));
 }
 
 double Datum::normalCompatible(Datum dato1, Datum dato2, double& z)
 {
-  z = (dato1.value-dato2.value)/
-    std::sqrt(dato1.error*dato1.error+dato2.error*dato2.error);
+  z = (dato1.m_value-dato2.m_value)/
+    std::sqrt(std::pow(dato1.m_uncertainty,2)+std::pow(dato2.m_uncertainty,2));
   return std::erfc(abs(z*M_SQRT1_2));
 }
 
@@ -234,8 +254,14 @@ Datum Datum::weightedMean(Datum *dataList, int numData)
   double numerator = 0.;
   double denominator = 0.;
   for (int i = 0; i < numData; i++) {
-    numerator += (dataList[i].value/(dataList[i].error*dataList[i].error));
-    denominator += (1./(dataList[i].error*dataList[i].error));
+    numerator += (dataList[i].m_value/(std::pow(dataList[i].m_uncertainty,2)));
+    denominator += (1./(std::pow(dataList[i].m_uncertainty,2)));
   }
   return Datum(numerator/denominator, std::sqrt(1./denominator));
+}
+
+std::ostream& operator<<(std::ostream& stream, const Datum& other)
+{
+  stream << other.to_string();
+  return stream;
 }

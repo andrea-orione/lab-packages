@@ -10,52 +10,53 @@ class Datum:
     Every instance represents a single point of data.
     """
 
-    def __init__(self, value, error=0.):
+    def __init__(self, value, uncertainty=0.):
         """
         Initialize the class.
 
         Parameters:
             value (float): the best esitmate of the data.
-            error (float): the uncertainty of the data.
+            uncertainty (float): the uncertainty of the data.
         """
         if not (isinstance(value, (float, int))
-                and isinstance(error, (float, int))):
+                and isinstance(uncertainty, (float, int))):
             raise TypeError
 
         self.value = value
-        self.error = abs(error)
+        self.uncertainty = abs(uncertainty)
 
     def __add__(self, other, quadrature: bool = False):
         """
         Addition operator.
 
         This function adds two data propagating the unceartainty.
-        If quadrature is set to true, to propagate the error the quadrature sum
-        will be used.
+        If quadrature is set to true, to propagate the uncertainty the
+        quadrature sum will be used.
 
         Parameters:
             other (Datum): the other Datum to sum.
             quadrature (bool): whether quadrature sum should be used.
         """
         if isinstance(other, (float, int)):
-            return Datum(self.value + other, self.error)
+            return Datum(self.value + other, self.uncertainty)
 
         if type(other) != type(self):
             raise TypeError
 
         if quadrature:
             return Datum(self.value + other.value,
-                         math.sqrt(self.error**2 + other.error**2))
+                         math.sqrt(self.uncertainty**2 + other.uncertainty**2))
 
-        return Datum(self.value + other.value, self.error + other.error)
+        return Datum(self.value + other.value,
+                     self.uncertainty + other.uncertainty)
 
     def __radd__(self, other, quadrature: bool = False):
         """
         Reversed addition operator.
 
         This function adds two data propagating the unceartainty.
-        If quadrature is set to true, to propagate the error the quadrature sum
-        will be used.
+        If quadrature is set to true, to propagate the uncertainty the
+        quadrature sum will be used.
 
         Parameters:
             other (Datum): the other Datum to sum.
@@ -69,8 +70,8 @@ class Datum:
         Subtraction operator.
 
         This function subtracts two data propagating the unceartainty.
-        If quadrature is set to true, to propagate the error the quadrature sum
-        will be used.
+        If quadrature is set to true, to propagate the uncertainty the
+        quadrature sum will be used.
 
         Parameters:
             other (Datum): the other Datum to subtract.
@@ -78,24 +79,25 @@ class Datum:
                 used.
         """
         if isinstance(other, (float, int)):
-            return Datum(self.value - other, self.error)
+            return Datum(self.value - other, self.uncertainty)
 
         if type(other) != type(self):
             raise TypeError
 
         if quadrature:
             return Datum(self.value - other.value,
-                         math.sqrt(self.error**2 + other.error**2))
+                         math.sqrt(self.uncertainty**2 + other.uncertainty**2))
 
-        return Datum(self.value - other.value, self.error + other.error)
+        return Datum(self.value - other.value,
+                     self.uncertainty + other.uncertainty)
 
     def __rsub__(self, other, quadrature: bool = False):
         """
         Reversed subtraction operator.
 
         This function subtracts two data propagating the unceartainty.
-        If quadrature is set to true, to propagate the error the quadrature sum
-        will be used.
+        If quadrature is set to true, to propagate the uncertainty the
+        quadrature sum will be used.
 
         Parameters:
             other (Datum): the other Datum to subtract.
@@ -115,8 +117,8 @@ class Datum:
         Multiplication operator.
 
         This function multiplies two data propagating the unceartainty.
-        If quadrature is set to true, to propagate the error the quadrature sum
-        will be used.
+        If quadrature is set to true, to propagate the uncertainty the
+        quadrature sum will be used.
 
         Parameters:
             other (Datum): the other Datum to multiply.
@@ -124,26 +126,27 @@ class Datum:
                 used.
         """
         if isinstance(other, (float, int)):
-            return Datum(self.value * other, self.error * abs(other))
+            return Datum(self.value * other, self.uncertainty * abs(other))
 
         if not isinstance(other, Datum):
             raise TypeError
 
         if quadrature:
             return Datum(self.value * other.value,
-                         math.sqrt((self.error*other.value)**2
-                                   + (self.value*other.error)**2))
+                         math.sqrt((self.uncertainty*other.value)**2
+                                   + (self.value*other.uncertainty)**2))
 
         return Datum(self.value * other.value,
-                     self.error*other.value + self.value*other.error)
+                     self.uncertainty*other.value +
+                     self.value*other.uncertainty)
 
     def __rmul__(self, other, quadrature: bool = False):
         """
         Reversed multiplication operator.
 
         This function multiplies two data propagating the unceartainty.
-        If quadrature is set to true, to propagate the error the quadrature sum
-        will be used.
+        If quadrature is set to true, to propagate the uncertainty the
+        quadrature sum will be used.
 
         Parameters:
             other (Datum): the other Datum to multiply.
@@ -157,8 +160,8 @@ class Datum:
         Division operator.
 
         This function divides two data propagating the unceartainty.
-        If quadrature is set to true, to propagate the error the quadrature sum
-        will be used.
+        If quadrature is set to true, to propagate the uncertainty the
+        quadrature sum will be used.
 
         Parameters:
             other (Datum): the other Datum to divide.
@@ -166,28 +169,28 @@ class Datum:
                 used.
         """
         if isinstance(other, (float, int)):
-            return Datum(self.value / other, self.error / abs(other))
+            return Datum(self.value / other, self.uncertainty / abs(other))
 
         if not isinstance(other, Datum):
             raise TypeError
 
         if quadrature:
             return Datum(self.value / other.value,
-                         math.sqrt((self.error/other.value)**2
-                                   + (other.error*self.value/other.value**2)**2
-                                   ))
+                         math.sqrt((self.uncertainty/other.value)**2 +
+                                   (other.uncertainty*self.value /
+                                    other.value**2)**2))
 
         return Datum(self.value / other.value,
-                     self.error/other.value +
-                     other.error*self.value/other.value**2)
+                     self.uncertainty/other.value +
+                     other.uncertainty*self.value/other.value**2)
 
     def __rtruediv__(self, other, quadrature: bool = False):
         """
         Reversed division operator.
 
         This function multiplies two data propagating the unceartainty.
-        If quadrature is set to true, to propagate the error the quadrature sum
-        will be used.
+        If quadrature is set to true, to propagate the uncertainty the
+        quadrature sum will be used.
 
         Parameters:
             other (Datum): the other Datum to multiply.
@@ -208,11 +211,11 @@ class Datum:
 
         This function creates a string representing the object.
         """
-        magnitude = math.floor(math.log10(self.error))
-        if self.error//(10**magnitude) == 1:
+        magnitude = math.floor(math.log10(self.uncertainty))
+        if self.uncertainty//(10**magnitude) == 1:
             magnitude -= 1
         return str(round(self.value/(10**magnitude))*(10**magnitude)) + " +- "\
-            + str(round(self.error/(10**magnitude))*(10**magnitude))
+            + str(round(self.uncertainty/(10**magnitude))*(10**magnitude))
 
     def __str__(self):
         """
@@ -247,7 +250,7 @@ class Datum:
         """
         Calculate the square root of the datum.
 
-        This function calculates the square root propagating the error.
+        This function calculates the square root propagating the uncertainty.
 
         Parameters:
             datum (Datum): the datum to be taken the square root.
@@ -259,7 +262,7 @@ class Datum:
             raise TypeError
 
         return Datum(math.sqrt(datum.value),
-                     0.5*datum.error/math.sqrt(datum.value))
+                     0.5*datum.uncertainty/math.sqrt(datum.value))
 
     @staticmethod
     def cbrt(datum):
@@ -276,7 +279,7 @@ class Datum:
             raise TypeError
 
         return Datum(math.cbrt(datum.value),
-                     1/3*datum.error/math.cbrt(datum.value**2))
+                     1/3*datum.uncertainty/math.cbrt(datum.value**2))
 
     @staticmethod
     def exp(datum):
@@ -293,7 +296,7 @@ class Datum:
             raise TypeError
 
         return Datum(math.exp(datum.value),
-                     datum.error*math.exp(datum.value))
+                     datum.uncertainty*math.exp(datum.value))
 
     @staticmethod
     def exp2(datum):
@@ -310,7 +313,8 @@ class Datum:
             raise TypeError
 
         return Datum(math.exp2(datum.value),
-                     datum.error*math.exp2(datum.value)*math.log(datum.value))
+                     datum.uncertainty*math.exp2(datum.value) *
+                     math.log(datum.value))
 
     @staticmethod
     def log(datum, base=False):
@@ -335,9 +339,9 @@ class Datum:
 
         if base:
             return Datum(math.log(datum.value, base),
-                         datum.error/(datum.value*math.log(base)))
+                         datum.uncertainty/(datum.value*math.log(base)))
         return Datum(math.log(datum.value),
-                     datum.error/(datum.value))
+                     datum.uncertainty/(datum.value))
 
     @staticmethod
     def log2(datum):
@@ -354,7 +358,7 @@ class Datum:
             raise TypeError
 
         return Datum(math.log2(datum.value),
-                     datum.error/(datum.value*math.log(2.0)))
+                     datum.uncertainty/(datum.value*math.log(2.0)))
 
     @staticmethod
     def log10(datum):
@@ -371,7 +375,7 @@ class Datum:
             raise TypeError
 
         return Datum(math.log10(datum.value),
-                     datum.error/(datum.value*math.log(10.0)))
+                     datum.uncertainty/(datum.value*math.log(10.0)))
 
     @staticmethod
     def pow(base, exponent):
@@ -395,9 +399,9 @@ class Datum:
             raise TypeError
 
         return Datum(math.pow(base.value, exponent.value),
-                     base.error * exponent.value * math.pow(base.value,
-                                                            exponent.value-1)
-                     + exponent.error * math.log(exponent.value)
+                     base.uncertainty * exponent.value *
+                     math.pow(base.value, exponent.value - 1)
+                     + exponent.uncertainty * math.log(exponent.value)
                      * math.pow(base.value, exponent.value))
 
     @staticmethod
@@ -415,7 +419,7 @@ class Datum:
             raise TypeError
 
         return Datum(math.acos(datum.value),
-                     datum.error/math.sqrt(1-datum.value**2))
+                     datum.uncertainty/math.sqrt(1-datum.value**2))
 
     @staticmethod
     def asin(datum):
@@ -432,7 +436,7 @@ class Datum:
             raise TypeError
 
         return Datum(math.asin(datum.value),
-                     datum.error/math.sqrt(1-datum.value**2))
+                     datum.uncertainty/math.sqrt(1-datum.value**2))
 
     @staticmethod
     def atan(datum):
@@ -449,7 +453,7 @@ class Datum:
             raise TypeError
 
         return Datum(math.atan(datum.value),
-                     datum.error/(1+datum.value**2))
+                     datum.uncertainty/(1+datum.value**2))
 
     @staticmethod
     def atan2(opposite, adjacent):
@@ -474,7 +478,7 @@ class Datum:
             raise TypeError
 
         return Datum(math.atan2(opposite.value, adjacent.value),
-                     Datum.tan(opposite/adjacent).error)
+                     Datum.tan(opposite/adjacent).uncertainty)
 
     @staticmethod
     def cos(datum):
@@ -491,7 +495,7 @@ class Datum:
             raise TypeError
 
         return Datum(math.cos(datum.value),
-                     datum.error*math.sin(datum.value))
+                     datum.uncertainty*math.sin(datum.value))
 
     @staticmethod
     def sin(datum):
@@ -508,7 +512,7 @@ class Datum:
             raise TypeError
 
         return Datum(math.sin(datum.value),
-                     datum.error*math.cos(datum.value))
+                     datum.uncertainty*math.cos(datum.value))
 
     @staticmethod
     def tan(datum):
@@ -525,7 +529,7 @@ class Datum:
             raise TypeError
 
         return Datum(math.tan(datum.value),
-                     datum.error/math.cos(datum.value)**2)
+                     datum.uncertainty/math.cos(datum.value)**2)
 
     @staticmethod
     def degrees(datum):
@@ -541,7 +545,8 @@ class Datum:
         if not isinstance(datum, Datum):
             raise TypeError
 
-        return Datum(math.degrees(datum.value), math.degrees(datum.error))
+        return Datum(math.degrees(datum.value),
+                     math.degrees(datum.uncertainty))
 
     @staticmethod
     def radians(datum):
@@ -557,7 +562,8 @@ class Datum:
         if not isinstance(datum, Datum):
             raise TypeError
 
-        return Datum(math.radians(datum.value), math.radians(datum.error))
+        return Datum(math.radians(datum.value),
+                     math.radians(datum.uncertainty))
 
     @staticmethod
     def normal_compatible(datum1, datum2, Z: bool = False):
@@ -577,8 +583,8 @@ class Datum:
             pVal (float): the p-value of the result.
             Z (float, optional): the value of the normal variable.
         """
-        ZVal = (datum1.value-datum2.value)/math.sqrt(datum1.error**2
-                                                     + datum2.error**2)
+        ZVal = (datum1.value-datum2.value)/math.sqrt(datum1.uncertainty**2
+                                                     + datum2.uncertainty**2)
         pVal = norm.cdf(-abs(ZVal))*2
 
         if Z:
@@ -603,8 +609,8 @@ class Datum:
             pVal (float): the p-value of the result.
             tv (float, optional): the value of the student variable.
         """
-        tVal = (datum1.value-datum2.value)/math.sqrt(datum1.error**2
-                                                     + datum2.error**2)
+        tVal = (datum1.value-datum2.value)/math.sqrt(datum1.uncertainty**2
+                                                     + datum2.uncertainty**2)
         pVal = t.cdf(-abs(tVal))*2
 
         if tv:
@@ -625,8 +631,8 @@ class Datum:
         num = 0
         den = 0
         for i in data_list:
-            num += (i.value/(i.error**2))
-            den += (1/(i.error**2))
+            num += (i.value/(i.uncertainty**2))
+            den += (1/(i.uncertainty**2))
         return Datum(num/den, math.sqrt(1/den))
 
 

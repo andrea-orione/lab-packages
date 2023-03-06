@@ -1,6 +1,8 @@
 #pragma once
 
+#include <ostream>
 #include <string>
+#include <iostream>
 
 /**
  * The foundamental class of the library.
@@ -13,14 +15,19 @@ private:
   /**
    * The best estimate of the Datum.
    */
-  double value;
+  double m_value;
 
   /**
    * The uncertainty of the Datum.
    */
-  double error;
+  double m_uncertainty;
 
 public:
+  /**
+   * Instanciates a void Datum object.
+   */
+  Datum();
+
   /**
    * Instanciates a Datum object.
    *
@@ -29,7 +36,7 @@ public:
    *
    * @param valuep the best estimate of the datum.
    */
-  Datum(double valuep);
+  Datum(double value);
 
   /**
    * Instanciates a Datum object.
@@ -38,68 +45,68 @@ public:
    *
    * @param valuep the to be set to the best estimate
    *     of the datum.
-   * @param errorp the value to be set to the uncertainty
-   *     of the datum.
+   * @param uncertainty the value to be set to the
+   *     uncertainty of the datum.
    */
-  Datum(double valuep, double errorp);
+  Datum(double value, double uncertainty);
 
   /**
    * Get the value of the datum.
    *
    * @returns the value of the best estimate of the datum.
    */
-  double get_value();
+  double get_value() const;
 
   /**
    * Get the uncertainty of the datum.
    *
    * @returns the value of the uncertainty of the datum.
    */
-  double get_error();
+  double get_uncertainty() const;
 
   /**
    * Set the value of the best estimate of the datum.
    *
-   * @param valuep the value to be set to the best estimate
+   * @param value the value to be set to the best estimate
    *     of the datum.
    */
-  void set_value(double valuep);
+  void set_value(double value);
 
   /**
    * Set the value of the uncertainty of the datum.
    *
-   * @param errorp the value to be set to the uncertainty
+   * @param unceartainty the value to be set to the uncertainty
    *     of the datum.
    */
-  void set_error(double errorp);
+  void set_uncertainty(double uncertainty);
 
   /**
    * Add two data together.
    *
    * @param other the other datum to be added.
    */
-  Datum operator+ (Datum other);
+  Datum operator+ (Datum other) const;
 
   /**
    * Subtract a datum from another.
    *
    * @param other the datum to be subtracted.
    */
-  Datum operator- (Datum other);
+  Datum operator- (Datum other) const;
 
   /**
    * Multiply two data.
    *
    * @param other the datum to be multiplied.
    */
-  Datum operator* (Datum other);
+  Datum operator* (Datum other) const;
 
   /**
    * Divide a datum by another.
    *
    * @param other the datum to be divided by.
    */
-  Datum operator/ (Datum other);
+  Datum operator/ (Datum other) const;
 
   /**
    * Add two data together.
@@ -108,7 +115,7 @@ public:
    * @param quadrature wheter the unceartainties
    *     should be added in quadrature.
    */
-  Datum add(Datum other, bool quadrature=false);
+  Datum add(Datum other, bool quadrature=false) const;
 
   /**
    * Subtract a datum from another.
@@ -117,7 +124,7 @@ public:
    * @param quadrature wheter the unceartainties
    *     should be added in quadrature.
    */
-  Datum subtract(Datum other, bool quadrature=false);
+  Datum subtract(Datum other, bool quadrature=false) const;
 
   /**
    * Subtract a datum from another.
@@ -126,7 +133,7 @@ public:
    * @param quadrature wheter the unceartainties
    *     should be added in quadrature.
    */
-  Datum multiply(Datum other, bool quadrature=false);
+  Datum multiply(Datum other, bool quadrature=false) const;
 
   /**
    * Divide a datum by another.
@@ -135,10 +142,10 @@ public:
    * @param quadrature wheter the unceartainties
    *     should be added in quadrature.
    */
-  Datum divide(Datum other, bool quadrature=false);
+  Datum divide(Datum other, bool quadrature=false) const;
 
-  bool operator< (Datum other);
-  bool operator> (Datum other);
+  bool operator< (Datum other) const;
+  bool operator> (Datum other) const;
 
   /**
    * Return the string representing the datum.
@@ -149,7 +156,7 @@ public:
    *
    * @return the string representing the datum.
    */
-  std::string to_string();
+  std::string to_string() const;
 
   static Datum sqrt(Datum dato);
   static Datum cbrt(Datum dato);
@@ -205,3 +212,6 @@ public:
    */
   static Datum weightedMean(Datum *dataList, int numData);
 };
+
+
+std::ostream& operator<<(std::ostream& stream, const Datum& other);
