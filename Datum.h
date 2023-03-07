@@ -158,27 +158,29 @@ public:
    */
   std::string to_string() const;
 
-  static Datum sqrt(Datum dato);
-  static Datum cbrt(Datum dato);
-  static Datum exp(Datum dato);
-  static Datum exp2(Datum dato);
-  static Datum log(Datum dato);
-  static Datum log10(Datum dato);
-  static Datum log2(Datum dato);
-  static Datum log(Datum dato, Datum base, bool quadrature=false);
-  static Datum log(Datum dato, double base);
-  static Datum pow(Datum base, Datum exponent, bool quadrature=false);
+  static Datum sqrt(const Datum& dato);
+  static Datum cbrt(const Datum& dato);
+  static Datum exp(const Datum& dato);
+  static Datum exp2(const Datum& dato);
+  static Datum log(const Datum& dato);
+  static Datum log10(const Datum& dato);
+  static Datum log2(const Datum& dato);
+  static Datum log(const Datum& dato, const Datum& base,
+                   bool quadrature=false);
+  static Datum log(const Datum& dato, double base);
+  static Datum pow(const Datum& base, const Datum& exponent,
+                   bool quadrature=false);
 
-  static Datum acos(Datum dato);
-  static Datum asin(Datum dato);
-  static Datum atan(Datum dato);
-  static Datum atan2(Datum opposite, Datum adjacent);
-  static Datum cos(Datum dato);
-  static Datum sin(Datum dato);
-  static Datum tan(Datum dato);
+  static Datum acos(const Datum& dato);
+  static Datum asin(const Datum& dato);
+  static Datum atan(const Datum& dato);
+  static Datum atan2(const Datum& opposite, const Datum& adjacent);
+  static Datum cos(const Datum& dato);
+  static Datum sin(const Datum& dato);
+  static Datum tan(const Datum& dato);
 
-  static Datum degrees(Datum dato);
-  static Datum radians(Datum dato);
+  static Datum degrees(const Datum& dato);
+  static Datum radians(const Datum& dato);
 
   /**
    * Perform a Z test to verify the compatibility of two data.
