@@ -28,62 +28,69 @@ void Datum::set_uncertainty(double uncertainty) { m_uncertainty = uncertainty; }
 
 Datum Datum::operator+(Datum other) const
 {
-  return Datum(m_value + other.m_value, m_uncertainty + other.m_uncertainty);
+  return Datum(m_value + other.m_value,
+               std::sqrt(std::pow(m_uncertainty,2) + std::pow(other.m_uncertainty,2)));
 }
 
 Datum Datum::operator-(Datum other) const
 {
-  return Datum(m_value - other.m_value, m_uncertainty + other.m_uncertainty);
+  return Datum(m_value - other.m_value,
+               std::sqrt(std::pow(m_uncertainty,2) + std::pow(other.m_uncertainty,2)));
 }
 
 Datum Datum::operator*(Datum other) const
 {
-  return Datum(m_value * other.m_uncertainty,
-               m_uncertainty * other.m_value + other.m_uncertainty * m_value);
+  return Datum(m_value * other.m_value,
+               std::sqrt(std::pow(m_uncertainty,2) * std::pow(other.m_value,2) +
+                         std::pow(other.m_uncertainty,2) * std::pow(m_value,2)));
 }
 
 Datum Datum::operator/(Datum other) const
 {
   return Datum(m_value/other.m_value,
-               m_uncertainty/other.m_value +
-               other.m_uncertainty*m_value/(other.m_value*other.m_value));
+               std::sqrt(std::pow(m_uncertainty/other.m_value,2) +
+                         std::pow(other.m_uncertainty*m_value/(other.m_value*other.m_value),2)));
 }
 
-Datum Datum::add(Datum other, bool quadrature) const
+Datum Datum::add(Datum other, bool quadrature, double covariance) const
 {
   if (quadrature)
     return Datum(m_value + other.m_value,
                  std::sqrt(std::pow(m_uncertainty,2) +
-                           std::pow(other.m_uncertainty,2)));
+                           std::pow(other.m_uncertainty,2) +
+                           2.*covariance));
   return Datum(m_value + other.m_value, m_uncertainty + other.m_uncertainty);
 }
 
-Datum Datum::subtract(Datum other, bool quadrature) const
+Datum Datum::subtract(Datum other, bool quadrature, double covariance) const
 {
   if (quadrature)
     return Datum(m_value - other.m_value,
                  std::sqrt(std::pow(m_uncertainty,2) +
-                           std::pow(other.m_uncertainty,2)));
+                           std::pow(other.m_uncertainty,2) +
+                           2.*covariance));
   return Datum(m_value - other.m_value, m_uncertainty + other.m_uncertainty);
 }
 
-Datum Datum::multiply(Datum other, bool quadrature) const
+Datum Datum::multiply(Datum other, bool quadrature, double covariance) const
 {
   if (quadrature)
     return Datum(m_value * other.m_value,
                  std::sqrt(std::pow(m_uncertainty,2)*std::pow(other.m_value,2) +
-                           std::pow(other.m_uncertainty,2)*std::pow(m_value,2)));
+                           std::pow(other.m_uncertainty,2)*std::pow(m_value,2) +
+                           2.*m_value*other.m_value*covariance));
   return Datum(m_value * other.m_value,
                m_uncertainty * other.m_value + other.m_uncertainty * m_value);
 }
 
-Datum Datum::divide(Datum other, bool quadrature) const
+Datum Datum::divide(Datum other, bool quadrature, double covariance) const
 {
   if (quadrature)
     return Datum(m_value / other.m_value,
                  std::sqrt(std::pow(m_uncertainty/other.m_value,2) +
                            std::pow(other.m_uncertainty*m_value,2)/
-                           std::pow(other.m_value, 4)));
+                           std::pow(other.m_value, 4) +
+                           2.*m_value*covariance/std::pow(other.m_value,2)));
   return Datum(m_value / other.m_value,
                m_uncertainty/other.m_value +
                other.m_uncertainty*m_value/std::pow(other.m_value, 2));
@@ -151,7 +158,7 @@ Datum Datum::log(const Datum& dato, double base)
                dato.m_uncertainty/(dato.m_value*std::log(base)));
 }
 
-Datum Datum::log(const Datum& dato, const Datum& base, bool quadrature)
+Datum Datum::log(const Datum& dato, const Datum& base, bool quadrature, double covariance)
 {
   if (quadrature)
     return Datum(std::log(dato.m_value)/std::log(base.m_value),
@@ -159,21 +166,25 @@ Datum Datum::log(const Datum& dato, const Datum& base, bool quadrature)
                                     (dato.m_value*std::log(base.m_value)),2) +
                            std::pow(base.m_uncertainty*std::log(dato.m_value)/
                                     (std::pow(std::log(base.m_value),2)*
-                                     base.m_value),2)));
+                                     base.m_value),2) +
+                           2.*covariance*std::log(dato.m_value)/
+                           (dato.m_value*std::pow(std::log(base.m_value),3)*base.m_value)));
   return Datum(std::log(dato.m_value)/std::log(base.m_value),
                dato.m_uncertainty/(dato.m_value*std::log(base.m_value)) +
                base.m_uncertainty*std::log(dato.m_value)/
                (std::pow(std::log(base.m_value),2) * base.m_value));
 }
 
-Datum Datum::pow(const Datum& base, const Datum& exponent, bool quadrature)
+Datum Datum::pow(const Datum& base, const Datum& exponent, bool quadrature, double covariance)
 {
   if (quadrature)
     return Datum(std::pow(base.m_value, exponent.m_value),
                  std::sqrt(std::pow(base.m_uncertainty*exponent.m_value*
                                     std::pow(base.m_value,exponent.m_value-1),2) +
                            std::pow(exponent.m_uncertainty*std::log(base.m_value)*
-                                    std::pow(base.m_value, exponent.m_value),2)));
+                                    std::pow(base.m_value, exponent.m_value),2) +
+                           2.*covariance*exponent.m_value*std::pow(base.m_value,exponent.m_value-1)*
+                           std::log(base.m_value)*std::pow(base.m_value,exponent.m_value)));
   return Datum(std::pow(base.m_value, exponent.m_value),
                base.m_uncertainty*exponent.m_value*
                std::pow(base.m_value,exponent.m_value-1) +

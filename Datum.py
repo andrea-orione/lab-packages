@@ -25,7 +25,7 @@ class Datum:
         self.value = value
         self.uncertainty = abs(uncertainty)
 
-    def __add__(self, other, quadrature: bool = False):
+    def __add__(self, other, quadrature: bool = True, covariance=0.):
         """
         Addition operator.
 
@@ -45,12 +45,13 @@ class Datum:
 
         if quadrature:
             return Datum(self.value + other.value,
-                         math.sqrt(self.uncertainty**2 + other.uncertainty**2))
+                         math.sqrt(self.uncertainty**2 + other.uncertainty**2
+                                   + 2.*covariance))
 
         return Datum(self.value + other.value,
                      self.uncertainty + other.uncertainty)
 
-    def __radd__(self, other, quadrature: bool = False):
+    def __radd__(self, other, quadrature: bool = True, covariance=0.):
         """
         Reversed addition operator.
 
@@ -60,12 +61,12 @@ class Datum:
 
         Parameters:
             other (Datum): the other Datum to sum.
-            quadrature (bool, default False): whether quadrature sum should be
+            quadrature (bool, default True): whether quadrature sum should be
                 used.
         """
-        return self.__add__(other, quadrature)
+        return self.__add__(other, quadrature, covariance)
 
-    def __sub__(self, other, quadrature: bool = False):
+    def __sub__(self, other, quadrature: bool = True, covariance=0.):
         """
         Subtraction operator.
 
@@ -75,7 +76,7 @@ class Datum:
 
         Parameters:
             other (Datum): the other Datum to subtract.
-            quadrature (bool, default False): whether quadrature sum should be
+            quadrature (bool, default True): whether quadrature sum should be
                 used.
         """
         if isinstance(other, (float, int)):
@@ -86,12 +87,13 @@ class Datum:
 
         if quadrature:
             return Datum(self.value - other.value,
-                         math.sqrt(self.uncertainty**2 + other.uncertainty**2))
+                         math.sqrt(self.uncertainty**2 + other.uncertainty**2
+                                   + 2*covariance))
 
         return Datum(self.value - other.value,
                      self.uncertainty + other.uncertainty)
 
-    def __rsub__(self, other, quadrature: bool = False):
+    def __rsub__(self, other, quadrature: bool = True, covariance=0.):
         """
         Reversed subtraction operator.
 
@@ -101,7 +103,7 @@ class Datum:
 
         Parameters:
             other (Datum): the other Datum to subtract.
-            quadrature (bool, default False): whether quadrature sum should be
+            quadrature (bool, default True): whether quadrature sum should be
                 used.
         """
         if isinstance(other, (float, int)):
@@ -110,9 +112,9 @@ class Datum:
         if not isinstance(other, Datum):
             raise TypeError
 
-        return other.__sub__(self, quadrature)
+        return other.__sub__(self, quadrature, covariance)
 
-    def __mul__(self, other, quadrature: bool = False):
+    def __mul__(self, other, quadrature: bool = True, covariance=0.):
         """
         Multiplication operator.
 
@@ -122,7 +124,7 @@ class Datum:
 
         Parameters:
             other (Datum): the other Datum to multiply.
-            quadrature (bool, default False): whether quadrature sum should be
+            quadrature (bool, default True): whether quadrature sum should be
                 used.
         """
         if isinstance(other, (float, int)):
@@ -134,13 +136,14 @@ class Datum:
         if quadrature:
             return Datum(self.value * other.value,
                          math.sqrt((self.uncertainty*other.value)**2
-                                   + (self.value*other.uncertainty)**2))
+                                   + (self.value*other.uncertainty)**2
+                                   + 2*covariance*self.value*other.value))
 
         return Datum(self.value * other.value,
                      self.uncertainty*other.value +
                      self.value*other.uncertainty)
 
-    def __rmul__(self, other, quadrature: bool = False):
+    def __rmul__(self, other, quadrature: bool = True, covariance=0.):
         """
         Reversed multiplication operator.
 
@@ -150,12 +153,12 @@ class Datum:
 
         Parameters:
             other (Datum): the other Datum to multiply.
-            quadrature (bool, default False): whether quadrature sum should be
+            quadrature (bool, default True): whether quadrature sum should be
                 used.
         """
         return self.__mul__(other, quadrature)
 
-    def __truediv__(self, other, quadrature: bool = False):
+    def __truediv__(self, other, quadrature: bool = True, covariance=0.):
         """
         Division operator.
 
@@ -165,7 +168,7 @@ class Datum:
 
         Parameters:
             other (Datum): the other Datum to divide.
-            quadrature (bool, default False): whether quadrature sum should be
+            quadrature (bool, default True): whether quadrature sum should be
                 used.
         """
         if isinstance(other, (float, int)):
@@ -178,13 +181,14 @@ class Datum:
             return Datum(self.value / other.value,
                          math.sqrt((self.uncertainty/other.value)**2 +
                                    (other.uncertainty*self.value /
-                                    other.value**2)**2))
+                                    other.value**2)**2 +
+                                   2*covariance*self.value/other.value**3))
 
         return Datum(self.value / other.value,
                      self.uncertainty/other.value +
                      other.uncertainty*self.value/other.value**2)
 
-    def __rtruediv__(self, other, quadrature: bool = False):
+    def __rtruediv__(self, other, quadrature: bool = True, covariance=0.):
         """
         Reversed division operator.
 
@@ -194,7 +198,7 @@ class Datum:
 
         Parameters:
             other (Datum): the other Datum to multiply.
-            quadrature (bool, default False): whether quadrature sum should be
+            quadrature (bool, default True): whether quadrature sum should be
                 used.
         """
         if isinstance(other, (float, int)):
@@ -203,7 +207,7 @@ class Datum:
         if not isinstance(other, Datum):
             raise TypeError
 
-        return other.__truediv__(self, quadrature)
+        return other.__truediv__(self, quadrature, covariance)
 
     def __repr__(self):
         """

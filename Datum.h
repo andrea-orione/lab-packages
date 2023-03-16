@@ -114,8 +114,10 @@ public:
    * @param other the other datum to be added.
    * @param quadrature wheter the unceartainties
    *     should be added in quadrature.
+   * @param covariance the covariance sigma^2_ab
+   *     between the two data.
    */
-  Datum add(Datum other, bool quadrature=false) const;
+  Datum add(Datum other, bool quadrature=true, double covariance=0.) const;
 
   /**
    * Subtract a datum from another.
@@ -123,8 +125,10 @@ public:
    * @param other the datum to be subtracted.
    * @param quadrature wheter the unceartainties
    *     should be added in quadrature.
+   * @param covariance the covariance sigma^2_ab
+   *     between the two data.
    */
-  Datum subtract(Datum other, bool quadrature=false) const;
+  Datum subtract(Datum other, bool quadrature=true, double covariance=0.) const;
 
   /**
    * Subtract a datum from another.
@@ -132,8 +136,10 @@ public:
    * @param other the datum to be subtracted.
    * @param quadrature wheter the unceartainties
    *     should be added in quadrature.
+   * @param covariance the covariance sigma^2_ab
+   *     between the two data.
    */
-  Datum multiply(Datum other, bool quadrature=false) const;
+  Datum multiply(Datum other, bool quadrature=true, double covariance=0.) const;
 
   /**
    * Divide a datum by another.
@@ -141,8 +147,10 @@ public:
    * @param other the datum to be divided by.
    * @param quadrature wheter the unceartainties
    *     should be added in quadrature.
+   * @param covariance the covariance sigma^2_ab
+   *     between the two data.
    */
-  Datum divide(Datum other, bool quadrature=false) const;
+  Datum divide(Datum other, bool quadrature=true, double covariance=0.) const;
 
   bool operator< (Datum other) const;
   bool operator> (Datum other) const;
@@ -166,10 +174,10 @@ public:
   static Datum log10(const Datum& dato);
   static Datum log2(const Datum& dato);
   static Datum log(const Datum& dato, const Datum& base,
-                   bool quadrature=false);
+                   bool quadrature=true, double covariance=0.);
   static Datum log(const Datum& dato, double base);
   static Datum pow(const Datum& base, const Datum& exponent,
-                   bool quadrature=false);
+                   bool quadrature=true, double covariance=0.);
 
   static Datum acos(const Datum& dato);
   static Datum asin(const Datum& dato);
