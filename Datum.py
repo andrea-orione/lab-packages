@@ -215,11 +215,13 @@ class Datum:
 
         This function creates a string representing the object.
         """
+        if self.uncertainty==0.:
+            return str(self.value)
         magnitude = math.floor(math.log10(self.uncertainty))
         if self.uncertainty//(10**magnitude) == 1:
             magnitude -= 1
-        return str(round(self.value/(10**magnitude))*(10**magnitude)) + " +- "\
-            + str(round(self.uncertainty/(10**magnitude))*(10**magnitude))
+        return str(round(self.value,-magnitude)) + " +- "\
+            + str(round(self.uncertainty,-magnitude))
 
     def __str__(self):
         """
