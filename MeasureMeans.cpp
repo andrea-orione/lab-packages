@@ -1,6 +1,5 @@
 #include "MeasureMeans.h"
 #include "Datum.h"
-#include <exception>
 #include <stdexcept>
 
 
