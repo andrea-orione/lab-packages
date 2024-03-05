@@ -1,13 +1,11 @@
 #include <cmath>
 #include <cstdlib>
-#include <iterator>
 #include <math.h>
 #include <ostream>
 #include <string>
 #include <sys/types.h>
-#include <type_traits>
 #include <iostream>
-#include "Datum.h"
+#include "Datum.hh"
 
 
 Datum::Datum() : m_value(0.), m_uncertainty(0.) {}
