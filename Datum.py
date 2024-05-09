@@ -156,7 +156,7 @@ class Datum:
             quadrature (bool, default True): whether quadrature sum should be
                 used.
         """
-        return self.__mul__(other, quadrature)
+        return self.__mul__(other, quadrature, covariance)
 
     def __truediv__(self, other, quadrature: bool = True, covariance=0.):
         """
@@ -220,7 +220,7 @@ class Datum:
         magnitude = math.floor(math.log10(self.uncertainty))
         if self.uncertainty//(10**magnitude) == 1:
             magnitude -= 1
-        return str(round(self.value,-magnitude)) + " +- "\
+        return str(round(self.value,-magnitude)) + " ± "\
             + str(round(self.uncertainty,-magnitude))
 
     def __str__(self):
